@@ -1,0 +1,30 @@
+# Python
+**pycache**/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Environment variables
+.env
+
+# Mac / Windows system files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# IDEs
+.vscode/
+.idea/
+
+# GCP credentials (IMPORTANT - never commit this)
+*.json
+
+# Dataflow temp files
+tmp/
