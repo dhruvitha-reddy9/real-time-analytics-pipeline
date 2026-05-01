@@ -2,9 +2,8 @@ import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions
 import json
 
-PROJECT_ID = "your-project-id"
-DATASET = "analytics_dataset"
-TABLE = "event_counts"
+PROJECT_ID = "project-7c8b1e72-b1d9-4794-8e1"
+BUCKET = "realtime-analytics-bucket-123"
 
 class ParseEvent(beam.DoFn):
     def process(self, element):
@@ -13,23 +12,24 @@ class ParseEvent(beam.DoFn):
         except:
             pass
 
-
 def run():
     options = PipelineOptions(
         streaming=True,
         project=PROJECT_ID,
         region="us-central1",
-        temp_location="gs://your-bucket/temp"
+        temp_location=f"gs://{BUCKET}/temp",
+        staging_location=f"gs://{BUCKET}/staging",
+        save_main_session=True
     )
 
     with beam.Pipeline(options=options) as p:
 
         events = (
             p
-            | "Read PubSub" >> beam.io.ReadFromPubSub(
+            | "ReadFromPubSub" >> beam.io.ReadFromPubSub(
                 topic=f"projects/{PROJECT_ID}/topics/user-events"
             )
-            | "Parse JSON" >> beam.ParDo(ParseEvent())
+            | "ParseJSON" >> beam.ParDo(ParseEvent())
         )
 
         counts = (
@@ -43,12 +43,12 @@ def run():
             })
         )
 
-        counts | beam.io.WriteToBigQuery(
-            table=f"{PROJECT_ID}:{DATASET}.{TABLE}",
+        counts | "WriteToBigQuery" >> beam.io.WriteToBigQuery(
+            table=f"{PROJECT_ID}:analytics_dataset.event_counts",
             schema="event_type:STRING, count:INTEGER",
+            create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
             write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND
         )
-
 
 if __name__ == "__main__":
     run()
